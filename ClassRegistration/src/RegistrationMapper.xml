@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="registration.dao.RegistrationMapper">
+
+	<insert id="insertMajor" parameterType="major">
+		insert into majors(
+		major
+		,building
+		) values(
+		#{major}
+		,#{building}
+		)
+	</insert>
+
+
+	<insert id="insertLecture" parameterType="lecture">
+		insert into
+		class_subject(
+		lecture_id
+		,credit
+		,lecture_name
+		,classification
+		,major
+		)
+		values(
+		lec_seq.nextval
+		,#{credit}
+		,#{subject}
+		,#{classify}
+		,#{major}
+		)
+	</insert>
+
+
+	<insert id="insertSyllabus" parameterType="syllabus">
+		insert into syllabus(
+		professor
+		, lecture_id
+		, content
+
+		) values (
+		#{professor}
+		,#{lecture_id}
+		,#{content}
+		)
+
+	</insert>
+	
+	
+	<delete id="deleteSyllabus" parameterType="syllabus">
+		delete
+			syllabus
+		where
+			 professor = #{professor} and
+			 lecture_id = #{lecture_id}
+	</delete>
+	
+	
+	<insert id="insertClass" parameterType="regist">
+		insert into
+		class_registration_list(
+		class_no
+		,lecture_id
+		,professor_id
+		,schedule_day
+		,schedule_start
+		,schedule_end
+		,quota
+		,applicant
+		) values(
+		reg_seq.nextval
+		,#{lecture_id}
+		,#{professor_id}
+		,#{schedule_day}
+		,#{schedule_start}
+		,#{schedule_end}
+		,#{quota}
+		,#{applicant}
+		)
+	</insert>
+	
+	<update id="updateClass" parameterType="regist">
+		update class_registration_list
+		set
+			 professor_id = #{professor_id}
+			,schedule_day = #{schedule_day}
+			,schedule_start = #{schedule_start}
+			,schedule_end = #{schedule_end}
+			,quota = #{quota}
+			,applicant = (select count(*) from class_application
+								where class_no = #{class_no})
+			
+		where
+			class_no = #{class_no}
+			
+	</update>
+	
+	<delete id="deleteClass" parameterType="int">
+		delete
+			from
+				class_registration_list
+			where
+				class_no = #{class_no}
+	</delete>
+	
+
+	<insert id="insertStudent" parameterType="student">
+		insert into students(
+			 student_id
+			,student_name
+			,student_pw
+			,major
+			,tutor
+		)values(
+			 #{id}
+			,#{name}
+			,#{password}
+			,#{major}
+			,#{tutor}
+		)
+	</insert>
+
+	<insert id="insertProfessor" parameterType="professor">
+		insert into
+		professors(
+		professor_id
+		,professor_pw
+		,professor_name
+		,major
+		)values (
+		#{id}
+		,#{password}
+		,#{name}
+		,#{major}
+		)
+	</insert>
+
+
+	<select id="classList" parameterType="hashmap" resultType="regist">
+		select
+			 r.class_no
+			,r.lecture_id
+			,s.lecture_name
+			,s.credit
+			,s.major lecture_major
+			,s.classification lecture_classify
+			,p.professor_name
+			,r.schedule_day
+			,r.schedule_start
+			,r.schedule_end
+			,r.quota
+			,r.applicant
+			,r.professor_id
+		from
+			 class_registration_list r
+			,class_subject s
+			,professors p
+		<where>
+			<if test="col == 1">
+				r.professor_id = p.professor_id and
+				r.lecture_id =
+				s.lecture_id
+			</if>
+			<if test="col == 2">
+				r.professor_id = p.professor_id and
+				r.lecture_id =
+				s.lecture_id and
+				r.professor_id = #{text}
+			</if>
+			<if test="col == 3">
+				r.professor_id = p.professor_id and
+				r.lecture_id =
+				s.lecture_id and
+				r.lecture_id = #{text}
+
+			</if>
+		</where>
+	</select>
+	
+
+	<select id="selectRegist" parameterType="int" resultType="regist">
+		select
+			 r.class_no
+			,r.lecture_id
+			,r.professor_id
+			,s.lecture_name
+			,s.credit
+			,s.major lecture_major
+			,s.classification lecture_classify
+			,p.professor_name
+			,r.schedule_day
+			,r.schedule_start
+			,r.schedule_end
+			,r.quota
+			,r.applicant
+		from
+			 class_registration_list r
+			,class_subject s
+			,professors p
+		where
+			r.professor_id = p.professor_id and
+			r.lecture_id = s.lecture_id and
+			r.class_no = #{class_no}
+	</select>
+
+
+	<select id="selectLecture" parameterType="int" resultType="lecture">
+		select
+		lecture_id lectureId
+		,credit
+		,lecture_name
+		,classification
+		,major
+		from
+		class_subject
+		where
+		lecture_id = #{lecture_id}
+	</select>
+	
+	<select id="showLecture" parameterType="String" resultType="lecture">
+		select
+		lecture_id lectureId
+		,credit
+		,lecture_name subject
+		,classification classify
+		,major
+		from
+		class_subject
+		where
+		major = #{major}
+	</select>
+
+	<select id="logInQuaryStudent" parameterType="student"
+		resultType="student">
+
+		select
+			 student_id id
+			,student_name name
+			,major
+			,tutor
+		from
+			students
+		where
+			student_id = #{id} and
+			(student_pw = #{password} or
+				#{password} ='signUp')
+
+	</select>
+
+	<select id="logInQuaryProfessor" parameterType="professor"
+		resultType="professor">
+
+		select
+			 professor_id id
+			,professor_name name
+			,major
+		from
+			professors
+		where
+			professor_id = #{id} and
+			(professor_pw = #{password} or
+				#{password} ='signUp')
+
+	</select>
+	
+	<select id="checkMajor" parameterType="String" resultType="int">
+		select
+			count(major)
+		from
+			majors
+		where
+			major = #{major}
+	</select>
+	
+	<select id="checkTutor" parameterType="professor" resultType="int">
+		select
+			count(major)
+		from
+			professors
+		where
+			professor_id = #{id} and
+			major = #{major}
+	</select>
+
+
+	<insert id="insertApplication" parameterType="application" >
+		insert into
+			class_application(
+				 class_no
+				,student_id
+			)values(
+				 #{class_no}
+				,#{student_id}
+			)
+	</insert>
+	
+	<select id="showApplication" parameterType="String" resultType="regist">
+		select
+			 r.class_no
+			,r.lecture_id
+			,s.lecture_name
+			,s.credit
+			,s.classification lecture_classify
+			,p.professor_name
+			,r.schedule_day
+			,r.schedule_start
+			,r.schedule_end
+		from
+			 class_registration_list r
+			,class_subject s
+			,professors p
+			,class_application a
+		where
+			r.professor_id = p.professor_id and
+			r.lecture_id = s.lecture_id and
+			r.class_no = a.class_no and
+			a.student_id = #{id}
+	</select>
+	
+	<delete id="deleteApplication" parameterType ="application">
+		
+		delete from 
+			class_application
+		where 
+			class_no = #{class_no} and
+			(student_id = #{student_id} or #{student_id} = 'drop_class')
+	</delete>
+	
+	<select id="selectSyllabus" parameterType="int" resultType="syllabus">
+	select 
+	s.lecture_name
+	, p.professor_name
+	, y.content
+    
+    from 
+    	syllabus y
+    	, class_subject s
+    	, class_registration_list r
+    	, professors p
+    where
+        r.class_no = #{class_no} and
+        y.professor = r.professor_id and
+        y.professor = p.professor_id and
+        y.lecture_id = r.lecture_id and
+        y.lecture_id = s.lecture_id
+	</select>
+
+	
+	
+	
+
+	<!-- 
+	<select id="studentSchedule" parameterType="String" resultType="regist">
+
+		select
+			 r.schedule_day
+			,r.schedule_start
+			,r.schedule_end 
+		from
+			class_registration_list r, class_application a
+		where
+			r.class_no = a.class_no and
+			a.student_id = #{student_id}
+
+	</select>
+ -->
+</mapper>
